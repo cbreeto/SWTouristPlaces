@@ -14,12 +14,19 @@ class VCMap: UIViewController, CLLocationManagerDelegate {
 
     
     @IBOutlet weak var map: MKMapView!
+    @IBOutlet weak var newWordField: UITextField!
+    
+    @IBOutlet weak var labelNombre: UILabel!
+    @IBOutlet weak var labelDescripcion: UILabel!
+    @IBOutlet weak var fieldDescripcion: UITextField!
+    @IBOutlet weak var fieldName: UITextField!
+    @IBOutlet weak var buttonGuardar: UIButton!
     
     //Variables de localización del usuario
     private let manager = CLLocationManager()
     private var locationPrev = CLLocation()
     private var first = true
-    
+    private var mLugar = ""
     //
     
     override func viewDidLoad() {
@@ -36,6 +43,11 @@ class VCMap: UIViewController, CLLocationManagerDelegate {
         manager.distanceFilter = 50.0
         
     }
+    
+    override func viewWillAppear(animated: Bool) {
+        self.disappearFields()
+    }
+    
     
     
     func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
@@ -101,6 +113,8 @@ class VCMap: UIViewController, CLLocationManagerDelegate {
         
         map.setRegion(region, animated: true)
         
+       
+        
     }
     
     
@@ -127,21 +141,80 @@ class VCMap: UIViewController, CLLocationManagerDelegate {
     
     
     @IBAction func actionGuardarLugar() {
+        var lugar = getAddress()
+        print("==en actionGuardar === \(lugar)")
+        if lugar == "" {
+            self.appearFields()
+            
+        }
         
+     
+    }
+    
+    func getAddress()->String{
+        var lugar = ""
         
-        
+        //Obteniendo la dirección
+        CLGeocoder().reverseGeocodeLocation(locationPrev) { (myPlacements, mError) -> Void in
+            
+            if mError != nil {
+                //Error
+            }
+            if let myPlacement = myPlacements?.first {
+                _ = "\(myPlacement.locality)  -  \(myPlacement.country)  - \(myPlacement.postalCode)"
+               
+                let mP = myPlacement.areasOfInterest
+                if let mP = myPlacement.areasOfInterest {
+                    print(mP)
+                }
+                else {
+                   //self.setAddress()
+                    print("====interest : \(mP)")
+                }
+                
+            }
+            
+            
+        }
+        print ("=== lugar:  \(lugar) ==")
+        return lugar
+    }
+    
+    func setAddress(){
+        //Preguntar al usuario por el nombre del lugar
+        let newWordPrompt = UIAlertController(title: "Agregar Nuevo", message: "¿Cómo se llama éste lugar?", preferredStyle: UIAlertControllerStyle.Alert)
+        newWordPrompt.addTextFieldWithConfigurationHandler(addTextField)
+        newWordPrompt.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Default, handler: nil))
+        newWordPrompt.addAction(UIAlertAction(title: "Guardar", style: UIAlertActionStyle.Default, handler: inputLugar))
+        presentViewController(newWordPrompt, animated: true, completion: nil)
+    }
+    
+    func inputLugar(alert: UIAlertAction!){
+        mLugar = self.newWordField.text!
+    }
+    func addTextField(textField: UITextField!){
+        textField.placeholder = "Lugar"
+        self.newWordField = textField
+    }
+
+    
+    func disappearFields() {
+        labelNombre.text = ""
+        labelDescripcion.text = ""
+        fieldName.hidden = true
+        fieldDescripcion.hidden = true
+        buttonGuardar.hidden = true
     }
     
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    func appearFields() {
+        labelNombre.text = "Nombre"
+        labelDescripcion.text = "Descripción"
+        fieldName.hidden = false
+        fieldDescripcion.hidden = false
+        buttonGuardar.hidden = false
     }
-    */
+    
+   
 
 }
